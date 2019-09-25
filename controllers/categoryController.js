@@ -1,8 +1,29 @@
 var Category = require('../models/category');
+var Item = require('../models/item');
+
+var async = require('async');
+
+exports.index = function(req, res) {
+    async.parallel({
+        item_count: function(callback) {
+            Item.countDocuments({}, callback); //Pass an empty object as match condition to find all documents of this collection
+        },
+        category_count: function(callback) {
+            Category.countDocuments({}, callback);
+        }
+    }, function(err, results) {
+        res.render('index', {title: 'Golf Store Home', error: err, data: results });
+    });
+};
 
 //Display list of all Categories.
 exports.category_list = function(req, res) {
-    res.send('NOT IMPLEMENTED: Category List');
+    Category.find({}, 'name')
+    .exec(function (err, list_categories) {
+        if (err) { return next(err); }
+        //Successful, so render
+        res.render('category_list', { title: 'Categories', category_list : list_categories });
+    });
 };
 
 // Display detail page for a specific Category.

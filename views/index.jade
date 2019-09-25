@@ -2,4 +2,16 @@ extends layout
 
 block content
   h1= title
-  p Welcome to #{title}
+  p Welcome to #[em Golf Store], a very basic Express website developed as part of The Odin Project's curriculum.
+
+  h1 Dynamic Content
+
+  if error
+    pError geting dynamic content
+  else
+    p The Golf Store has the following record counts:
+
+    ul
+      li #[strong Categories:] !{data.category_count}
+      li #[strong Clubs:] !{data.item_count}
+

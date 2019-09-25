@@ -8,7 +8,7 @@ var item_controller = require('../controllers/itemController');
 /// CATEGORY ROUTES ///
 
 // GET catalog home page.
-router.get('/', category_controller.category_list);
+router.get('/', category_controller.index);
 
 // GET request for creating a category. NOTE This must come before routes that display category (uses id).
 router.get('/category/create', category_controller.category_create_get);
