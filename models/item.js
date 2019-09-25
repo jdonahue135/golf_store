@@ -19,5 +19,12 @@ ItemSchema
   return '/category/item/' + this._id;
 });
 
+//Virtual for item's price in USD
+ItemSchema
+.virtual('usd')
+.get(function() {
+  return '$' + this.price;
+});
+
 //Export model
 module.exports = mongoose.model('Item', ItemSchema);
