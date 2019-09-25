@@ -11,8 +11,20 @@ exports.item_list = function(req, res, next) {
 };
 
 // Display detail page for a specific item.
-exports.item_detail = function(req, res) {
-    res.send('NOT IMPLEMENTED: item detail: ' + req.params.id);
+exports.item_detail = function(req, res, next) {
+    
+    Item.findById(req.params.id)
+    .populate('category')
+    .exec(function (err, item) {
+        if (err) { return next(err); }
+        if (item==null) { //No results.
+            var err = new Error('Club not found');
+            err.status = 404;
+            return next(err);
+        }
+    // Seccessful, so render.
+    res.render('item_detail', { title: 'Club: '+item.name, item: item});
+    })
 };
 
 // Display item create form on GET.
