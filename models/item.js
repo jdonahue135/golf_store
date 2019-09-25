@@ -16,7 +16,7 @@ var ItemSchema = new Schema(
 ItemSchema
 .virtual('url')
 .get(function () {
-  return '/category/item/' + this._id;
+  return '/catalog/item/' + this._id;
 });
 
 //Virtual for item's price in USD
