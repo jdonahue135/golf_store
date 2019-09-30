@@ -67,7 +67,6 @@ exports.item_create_post = [
             Category.find({}, 'name')
                 .exec(function (err, list_categories) {
                     if (err) { return next(err); }
-
                     res.render('item_form', { title: 'Create Item', categories: list_categories, item: req.body, errors: errors.array() });
                     return;
             });
@@ -94,13 +93,22 @@ exports.item_create_post = [
 ];
 
 // Display item delete form on GET.
-exports.item_delete_get = function(req, res) {
-    res.send('NOT IMPLEMENTED: item delete GET');
+exports.item_delete_get = function(req, res, next) {
+    Item.findById(req.params.id)
+        .exec(function (err, item) {
+            if (err) { return next(err); }
+            //Successful, so render.
+            res.render( 'item_delete', { title: 'Delete Club', item: item } );
+        });
 };
 
 // Handle item delete on POST.
-exports.item_delete_post = function(req, res) {
-    res.send('NOT IMPLEMENTED: item delete POST');
+exports.item_delete_post = function(req, res, next) {
+    Item.findByIdAndRemove(req.params.id, function deleteItem(err) {
+        if (err) { return next(err); }
+        //Success - go to item list
+        res.redirect('/catalog/items');
+    })
 };
 
 // Display item update form on GET.
