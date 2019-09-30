@@ -101,13 +101,51 @@ exports.category_create_post = [
 ];
 
 // Display category delete form on GET.
-exports.category_delete_get = function(req, res) {
-    res.send('NOT IMPLEMENTED: category delete GET');
+exports.category_delete_get = function(req, res, next) {
+    
+    async.parallel({
+        category: function(callback) {
+            Category.findById(req.params.id).exec(callback)
+        },
+        category_items: function(callback) {
+            Item.find({ 'category': req.params.id }).exec(callback)
+        },
+    }, function(err, results) {
+        if (err) { return next(err); }
+        if (results.category==null) { // No reults
+            res.redirect('/catalog/categories');
+        }
+        //Successful, So render.
+        res.render('category_delete', { title: 'Delete Category', category: results.category, category_items: results.category_items } );
+    });
+
 };
 
 // Handle category delete on POST.
-exports.category_delete_post = function(req, res) {
-    res.send('NOT IMPLEMENTED: category delete POST');
+exports.category_delete_post = function(req, res, next) {
+    async.parallel({
+        category: function(callback) {
+            Category.findById(req.body.id).exec(callback)
+        },
+        category_items: function(callback) {
+            Item.find({ 'category': req.body.id }).exec(callback)
+        },
+    }, function(err, results) {
+        if (err) { return next(err); }
+        if (results.category_items.length > 0) {
+            //Category has items. Render in same way as for get route
+            res.render('category_delete', { title: 'Delete Category', category: results.category, category_items: results.category_items } );
+            return;
+        }
+        else {
+            //Category has no items. Delete object and redirect to catogory list.
+            Category.findByIdAndRemove(req.body.id, function deleteCategory(err) {
+                if (err) { return next(err); }
+                //Success - go to category list
+                res.redirect('/catalog/categories')
+            })
+        }
+    });
 };
 
 // Display category update form on GET.
