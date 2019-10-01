@@ -1,0 +1,1 @@
+A very basic Express website developed as part of The Odin Project's curriculum (https://www.theodinproject.com/courses/nodejs/lessons/inventory-application)
