@@ -1,6 +1,7 @@
 var Item = require('../models/item');
 var Category = require('../models/category');
 
+var async = require('async');
 
 const { body,validationResult } = require('express-validator/check');
 const { sanitizeBody } = require('express-validator/filter');
@@ -112,11 +113,66 @@ exports.item_delete_post = function(req, res, next) {
 };
 
 // Display item update form on GET.
-exports.item_update_get = function(req, res) {
-    res.send('NOT IMPLEMENTED: item update GET');
+exports.item_update_get = function(req, res, next) {
+    // get item and all categories for form
+    async.parallel({
+        item: function(callback) {
+            Item.findById(req.params.id).exec(callback)
+        },
+        categories: function(callback) {
+            Category.find({}, 'name').exec(callback)
+        },
+    }, function(err, results) {
+        if (err) { return next(err); }
+        if (results.item==null) { //no results
+            res.redirect('catalog/items')
+        }
+        //Successful, so render.
+        res.render('item_form', { title: 'Update Club', item: results.item, categories: results.categories } );
+    });
 };
 
 // Handle item update on POST.
-exports.item_update_post = function(req, res) {
-    res.send('NOT IMPLEMENTED: item update POST');
-};
+exports.item_update_post = [
+    //Validate fields.
+    body('name').isLength({ min: 1 }).trim().withMessage('Name must be specified.'),
+    body('description').isLength({ min: 1 }).trim().withMessage('Description must be specified.'),
+    body('category').isLength({ min: 1 }).trim().withMessage('Category must be specified'),
+    body('price').isLength({ min: 1 }).trim().withMessage('Price must be specified'),
+    body('number_in_stock').isLength({ min: 1 }).trim().withMessage('Number in stock must be specified'),
+    
+    // Sanitize fields (using wildcard).
+    sanitizeBody('*').escape(),
+
+    //Process request after validation and sanitization.
+    (req, res, next) => {
+
+        //Extract the validation errors from a request.
+        const errors = validationResult(req);
+
+        //Create an Item object with escaped/trimmed data and old id.
+        var item = new Item(
+            {
+                name: req.body.name,
+                description: req.body.description,
+                category: req.body.category,
+                price: req.body.price,
+                number_in_stock: req.body.number_in_stock,
+                _id: req.params.id //This is required, or a new ID will be assigned!
+            });
+
+        if (!errors.isEmpty()) {
+            //There are errors. Render form again with sanitized values/errors messages.
+            res.render('item_form', { title: 'Update Club', category: req.body, errors: errors.array() });
+            return;
+        }
+        else {
+            // Data from form is valid, update item.
+            Item.findByIdAndUpdate(req.params.id, item, {}, function(err, theitem) {
+                if (err) { return next(err); }
+                    //Successful, so render.
+                    res.redirect(theitem.url);
+            })
+        }
+    }
+]

@@ -6,9 +6,9 @@ block content
   form(method='POST' action='')
     div.form-group
       label(for='name') Name:
-      input#name.form-control(type='text' placeholder='Name' name='name' required='true' value=(undefined===category ? '' : category.name) )
+      input#name.form-control(type='text' placeholder='Name' name='name' required='true' value=(undefined===item ? '' : item.name) )
       label(for='description') Description:
-      input#description.form-control(type='text' placeholder='Description' name='description' required='true' value=(undefined===category ? '' : category.description))
+      input#description.form-control(type='text' placeholder='Description' name='description' required='true' value=(undefined===item ? '' : item.description))
     div.form-group
       label(for='category') Category:
       select#category.form-control(type='select', placeholder='Select category' name='category' required='true' )

@@ -31,7 +31,6 @@ exports.category_list = function(req, res) {
 
 // Display detail page for a specific Category.
 exports.category_detail = function(req, res, next) {
-    console.log('we get to this function');
     async.parallel({
         category: function(callback) {
             Category.findById(req.params.id)
@@ -139,7 +138,7 @@ exports.category_delete_post = function(req, res, next) {
         }
         else {
             //Category has no items. Delete object and redirect to catogory list.
-            Category.findByIdAndRemove(req.body.id, function deleteCategory(err) {
+            Category.findByIdAndRemove(req.params.id, function deleteCategory(err) {
                 if (err) { return next(err); }
                 //Success - go to category list
                 res.redirect('/catalog/categories')
@@ -149,11 +148,52 @@ exports.category_delete_post = function(req, res, next) {
 };
 
 // Display category update form on GET.
-exports.category_update_get = function(req, res) {
-    res.send('NOT IMPLEMENTED: category update GET');
+exports.category_update_get = function(req, res, next) {
+    // Get category for form
+    Category.findById(req.params.id)
+        .exec(function(err, category) {
+            if (err) { return next(err); }
+            //Sucessful, so render
+            res.render('category_form', { title: 'Update Category', category: category } )
+        });
 };
 
 // Handle category update on POST.
-exports.category_update_post = function(req, res) {
-    res.send('NOT IMPLEMENTED: category update POST');
-};
+exports.category_update_post = [
+    // Validate Fields
+    body('name').isLength({ min: 1 }).trim().withMessage('Name must be specified.'),
+    body('description').isLength({ min: 1 }).trim().withMessage('Description must be specified.'),
+    
+    //Sanitize fields.
+    sanitizeBody('name').escape(),
+    sanitizeBody('description').escape(),
+
+    //Process request after validation and sanitization.
+    (req, res, next) => {
+
+        //Extract the validation errors from a request.
+        const errors = validationResult(req);
+
+        //Create a Category object with escaped/trimmed data and old id
+        var category = new Category(
+            {
+                name: req.body.name,
+                description: req.body.description,
+                _id:req.params.id //This is required, or a new ID will be assigned!
+            });
+
+        if (!errors.isEmpty()) {
+            //There are errors. Render form again with sanitized values/errors messages.
+            res.render('category_form', { title: 'Update Category', category: req.body, errors: errors.array() });
+            return;
+        }
+        else {
+            //Data from form is valid. Update record
+            Category.findByIdAndUpdate(req.params.id, category, {}, function(err, thecategory) {
+                if (err) { return next(err); }
+                    //Successful, so render
+                    res.redirect(thecategory.url);
+            });
+        }
+    }
+];
